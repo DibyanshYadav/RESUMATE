@@ -1,4 +1,3 @@
-```python
 import html
 import streamlit as st
 from dotenv import load_dotenv
@@ -1131,4 +1130,3 @@ else:
         "Upload a resume and paste a JD, then click "
         "'Tailor my resume' to get started."
     )
-
