@@ -47,6 +47,12 @@ TEMPLATE_META = {
         "accent": "#1A1A1A",
         "layout": "single",
     },
+    "doublecol": {
+        "label": "Double Column",
+        "description": "Full-width header, wide left column for experience/projects, right sidebar for skills/education.",
+        "accent": "#1F2937",
+        "layout": "two-col-right",
+    },
 }
 
 
@@ -136,6 +142,65 @@ PREVIEW_CSS = """
     border-radius: 999px;
     font-size: 12px;
     margin: 0 6px 7px 0;
+}
+
+
+/* ------------------------------------------------------------------------ */
+/* Double Column template */
+/* ------------------------------------------------------------------------ */
+
+.resume-doublecol {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #111827;
+}
+
+.resume-doublecol .doublecol-header {
+    border-bottom: 2px solid #1F2937;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+
+.resume-doublecol .resume-name {
+    font-size: 27px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.resume-doublecol .resume-contact {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.resume-doublecol .doublecol-body {
+    display: grid;
+    grid-template-columns: 64% 36%;
+    gap: 24px;
+}
+
+.resume-doublecol .doublecol-sidebar {
+    border-left: 1px solid #e5e7eb;
+    padding-left: 20px;
+}
+
+.resume-doublecol .section-title {
+    color: #1F2937;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 18px;
+    margin-bottom: 8px;
+}
+
+@media (max-width: 800px) {
+    .resume-doublecol .doublecol-body {
+        grid-template-columns: 1fr;
+    }
+
+    .resume-doublecol .doublecol-sidebar {
+        border-left: none;
+        padding-left: 0;
+    }
 }
 
 
@@ -524,6 +589,37 @@ def render_preview_html(data, template="modern"):
             f'<div class="summary">{summary}</div>'
         )
 
+    if template == "doublecol":
+        skills_html = render_skills_list(skills)
+
+        main_html = f"""
+            <div class="doublecol-main">
+                {summary_html}
+                {render_section("Experience", experience_html)}
+                {render_section("Projects", projects_html)}
+            </div>
+        """
+
+        sidebar_html = f"""
+            <div class="doublecol-sidebar">
+                {render_section("Skills", skills_html)}
+                {render_section("Education", education_html)}
+            </div>
+        """
+
+        return f"""
+        <div class="resume-preview resume-doublecol">
+            <div class="doublecol-header">
+                <div class="resume-name">{name}</div>
+                <div class="resume-contact">{contact}</div>
+            </div>
+            <div class="doublecol-body">
+                {main_html}
+                {sidebar_html}
+            </div>
+        </div>
+        """
+
     if template == "minimal":
         skills_html = render_skills_list(skills)
 
@@ -621,6 +717,20 @@ def _template_swatch_html(accent, layout):
                     <div style="height:3px; width:90%; background:#00000022; border-radius:2px;"></div>
                     <div style="height:3px; width:80%; background:#00000022; border-radius:2px;"></div>
                     <div style="height:3px; width:85%; background:#00000022; border-radius:2px;"></div>
+                </div>
+            </div>
+        """
+    elif layout == "two-col-right":
+        body = f"""
+            <div style="display:flex; flex-direction:column; gap:3px; height:100%;">
+                <div style="height:6px; width:55%; background:{accent}; border-radius:2px;"></div>
+                <div style="display:flex; flex:1; gap:3px; padding-top:2px;">
+                    <div style="flex:1; display:flex; flex-direction:column; gap:3px;">
+                        <div style="height:3px; width:90%; background:#00000022; border-radius:2px;"></div>
+                        <div style="height:3px; width:80%; background:#00000022; border-radius:2px;"></div>
+                        <div style="height:3px; width:85%; background:#00000022; border-radius:2px;"></div>
+                    </div>
+                    <div style="width:30%; background:{accent}18; border-radius:2px;"></div>
                 </div>
             </div>
         """

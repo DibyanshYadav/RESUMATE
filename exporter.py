@@ -68,6 +68,15 @@ COMPACT = {
     "body": colors.HexColor("#374151"),
     "border": colors.HexColor("#E5E7EB"),
 }
+DOUBLECOL = {
+    "accent": colors.HexColor("#1F2937"),
+    "sidebar_bg": colors.HexColor("#F3F4F6"),
+    "text": colors.HexColor("#111827"),
+    "sub": colors.HexColor("#6B7280"),
+    "muted": colors.HexColor("#9CA3AF"),
+    "body": colors.HexColor("#374151"),
+    "border": colors.HexColor("#E5E7EB"),
+}
 
 PAGE_MARGIN = 0.65 * inch
 
@@ -91,6 +100,8 @@ def build_pdf(data: dict, template: str = "modern") -> bytes:
         return _pdf_classic(data)
     if template == "compact":
         return _pdf_compact(data)
+    if template == "doublecol":
+        return _pdf_doublecol(data)
     return _pdf_modern(data)
 
 
@@ -419,6 +430,111 @@ def _pdf_compact(data: dict) -> bytes:
     return buf.getvalue()
 
 
+def _pdf_doublecol(data: dict) -> bytes:
+    """Full-width header, then a wide left main column (Summary/Experience/Projects)
+    and a narrower right sidebar (Skills/Education) — Enhancv-style double column."""
+    pal = DOUBLECOL
+    buf = io.BytesIO()
+    doc = _pdf_doc(buf)
+    content_width = doc.width
+    main_w = content_width * 0.64
+    sidebar_w = content_width * 0.36 - 14
+
+    s_name = ParagraphStyle("dc_name", fontName="Helvetica-Bold", fontSize=19, textColor=pal["text"], leading=22)
+    s_contact = ParagraphStyle("dc_contact", fontName="Helvetica", fontSize=9, textColor=pal["sub"], leading=13, spaceBefore=3)
+    s_side_title = ParagraphStyle("dc_side_title", fontName="Helvetica-Bold", fontSize=9, textColor=pal["accent"], leading=12, spaceBefore=10, spaceAfter=4)
+    s_side_item = ParagraphStyle("dc_side_item", fontName="Helvetica", fontSize=9, textColor=pal["body"], leading=13, leftIndent=10)
+    s_side_edu_title = ParagraphStyle("dc_side_edu_title", fontName="Helvetica-Bold", fontSize=9, textColor=pal["text"], leading=12)
+    s_side_edu_sub = ParagraphStyle("dc_side_edu_sub", fontName="Helvetica", fontSize=8, textColor=pal["sub"], leading=11)
+    s_main_title = ParagraphStyle("dc_main_title", fontName="Helvetica-Bold", fontSize=10, textColor=pal["accent"], leading=13, spaceBefore=10, spaceAfter=6)
+    s_summary = ParagraphStyle("dc_summary", fontName="Helvetica", fontSize=9.5, textColor=pal["body"], leading=13.5)
+    s_entry_title = ParagraphStyle("dc_entry_title", fontName="Helvetica-Bold", fontSize=10, textColor=pal["text"], leading=13)
+    s_entry_dates = ParagraphStyle("dc_entry_dates", fontName="Helvetica", fontSize=8.5, textColor=pal["muted"], leading=12, alignment=2)
+    s_entry_sub = ParagraphStyle("dc_entry_sub", fontName="Helvetica-Oblique", fontSize=9, textColor=pal["sub"], leading=12, spaceAfter=2)
+    s_bullet = ParagraphStyle("dc_bullet", fontName="Helvetica", fontSize=9, textColor=pal["body"], leading=13, leftIndent=10)
+
+    story = []
+    story.append(Paragraph(_get(data, "name", default="Your Name"), s_name))
+    contact = _get(data, "contact")
+    if contact:
+        story.append(Paragraph(contact, s_contact))
+    story.append(Spacer(1, 6))
+    story.append(HRFlowable(width="100%", thickness=1.4, color=pal["accent"], spaceAfter=10))
+
+    # --- main column ---
+    main = []
+    summary = _get(data, "summary")
+    if summary:
+        main.append(Paragraph("SUMMARY", s_main_title))
+        main.append(Paragraph(summary, s_summary))
+
+    experience = data.get("experience") or []
+    if experience:
+        main.append(Paragraph("EXPERIENCE", s_main_title))
+        for job in experience:
+            title = f'{_get(job, "title")} — {_get(job, "company")}'.strip(" —")
+            row = Table([[Paragraph(title, s_entry_title), Paragraph(_get(job, "dates"), s_entry_dates)]],
+                        colWidths=[main_w * 0.68, main_w * 0.32])
+            row.setStyle(TableStyle([("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                                      ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                                      ("VALIGN", (0, 0), (-1, -1), "BOTTOM")]))
+            main.append(row)
+            bullets = job.get("bullets") or []
+            if bullets:
+                main.append(ListFlowable(
+                    [ListItem(Paragraph(b, s_bullet), leftIndent=10) for b in bullets],
+                    bulletType="bullet", start="•", leftIndent=12, bulletFontSize=8,
+                ))
+            main.append(Spacer(1, 8))
+
+    projects = data.get("projects") or []
+    if projects:
+        main.append(Paragraph("PROJECTS", s_main_title))
+        for proj in projects:
+            main.append(Paragraph(_get(proj, "name"), s_entry_title))
+            desc = _get(proj, "description")
+            if desc:
+                main.append(Paragraph(desc, s_entry_sub))
+            bullets = proj.get("bullets") or []
+            if bullets:
+                main.append(ListFlowable(
+                    [ListItem(Paragraph(b, s_bullet), leftIndent=10) for b in bullets],
+                    bulletType="bullet", start="•", leftIndent=12, bulletFontSize=8,
+                ))
+            main.append(Spacer(1, 8))
+
+    # --- sidebar (right) ---
+    side = []
+    skills = data.get("skills") or []
+    if skills:
+        side.append(Paragraph("SKILLS", s_side_title))
+        side.append(ListFlowable(
+            [ListItem(Paragraph(s, s_side_item), leftIndent=10) for s in skills],
+            bulletType="bullet", start="•", leftIndent=10, bulletFontSize=8,
+        ))
+    education = data.get("education") or []
+    if education:
+        side.append(Paragraph("EDUCATION", s_side_title))
+        for edu in education:
+            side.append(Paragraph(_get(edu, "degree"), s_side_edu_title))
+            side.append(Paragraph(_get(edu, "institution"), s_side_edu_sub))
+            side.append(Paragraph(_get(edu, "dates"), s_side_edu_sub))
+            side.append(Spacer(1, 6))
+
+    body = Table([[main, side]], colWidths=[main_w, sidebar_w + 14])
+    body.setStyle(TableStyle([
+        ("LEFTPADDING", (0, 0), (0, 0), 0), ("RIGHTPADDING", (0, 0), (0, 0), 14),
+        ("LEFTPADDING", (1, 0), (1, 0), 14), ("RIGHTPADDING", (1, 0), (1, 0), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LINEBEFORE", (1, 0), (1, 0), 0.75, pal["border"]),
+    ]))
+    story.append(body)
+
+    doc.build(story)
+    return buf.getvalue()
+
+
 # ===========================================================================
 # DOCX (python-docx)
 # ===========================================================================
@@ -429,6 +545,8 @@ def build_docx(data: dict, template: str = "modern") -> bytes:
         return _docx_classic(data)
     if template == "compact":
         return _docx_compact(data)
+    if template == "doublecol":
+        return _docx_doublecol(data)
     return _docx_modern(data)
 
 
@@ -685,7 +803,138 @@ def _docx_classic(data: dict) -> bytes:
     return buf.getvalue()
 
 
-def _zero_cell_margins(cell, left=100, right=100, top=100, bottom=100):
+def _docx_doublecol(data: dict) -> bytes:
+    """Full-width header, then left main column (Summary/Experience/Projects)
+    and right sidebar (Skills/Education) — no shaded background, thin divider line."""
+    doc = Document()
+    _docx_margins(doc, inches=0.6)
+    FONT = "Calibri"
+    ACCENT, TEXT, SUB, MUTED, BODY = "1F2937", "111827", "6B7280", "9CA3AF", "374151"
+    MAIN_W, SIDE_W = 4.7, 2.5
+
+    # --- header (full width) ---
+    p = doc.add_paragraph()
+    _run(p, _get(data, "name", default="Your Name"), bold=True, size=18, color=TEXT, font=FONT)
+    contact = _get(data, "contact")
+    if contact:
+        cp = doc.add_paragraph()
+        cp.paragraph_format.space_after = Pt(6)
+        _run(cp, contact, size=9, color=SUB, font=FONT)
+
+    _add_bottom_border(doc.paragraphs[-1], color=ACCENT, size=10)
+    doc.add_paragraph().paragraph_format.space_after = Pt(2)
+
+    # --- two-column body ---
+    outer = doc.add_table(rows=1, cols=2)
+    outer.style = None
+    outer.autofit = False
+    outer.allow_autofit = False
+    tbl = outer._tbl
+    layout = OxmlElement("w:tblLayout")
+    layout.set(qn("w:type"), "fixed")
+    tbl.tblPr.append(layout)
+
+    main_cell, side_cell = outer.rows[0].cells
+    main_cell.width = Inches(MAIN_W)
+    side_cell.width = Inches(SIDE_W)
+    _set_cell_borders_none(main_cell)
+    _set_cell_borders_none(side_cell)
+    _zero_cell_margins(main_cell, left=0, right=200, top=0, bottom=0)
+    _zero_cell_margins(side_cell, left=200, right=0, top=0, bottom=0)
+    main_cell.vertical_alignment = WD_ALIGN_VERTICAL.TOP
+    side_cell.vertical_alignment = WD_ALIGN_VERTICAL.TOP
+
+    def clear(cell):
+        cell.paragraphs[0].text = ""
+        return cell.paragraphs[0]
+
+    # --- main (left) ---
+    main_first = clear(main_cell)
+
+    def main_section(title, first=False):
+        target = main_first if first else main_cell.add_paragraph()
+        target.paragraph_format.space_before = Pt(0 if first else 10)
+        target.paragraph_format.space_after = Pt(4)
+        _run(target, title.upper(), bold=True, size=10, color=ACCENT, font=FONT)
+
+    first_used = False
+    summary = _get(data, "summary")
+    if summary:
+        main_section("Summary", first=True)
+        first_used = True
+        p = main_cell.add_paragraph()
+        _run(p, summary, size=9.5, color=BODY, font=FONT)
+
+    experience = data.get("experience") or []
+    if experience:
+        main_section("Experience", first=not first_used)
+        first_used = True
+        for job in experience:
+            title = f'{_get(job, "title")} — {_get(job, "company")}'.strip(" —")
+            p = main_cell.add_paragraph()
+            p.paragraph_format.space_after = Pt(0)
+            _run(p, title, bold=True, size=10, color=TEXT, font=FONT)
+            dates = _get(job, "dates")
+            if dates:
+                _run(p, "   " + dates, size=8.5, color=MUTED, font=FONT)
+            for b in job.get("bullets") or []:
+                bp = main_cell.add_paragraph(style="List Bullet")
+                bp.paragraph_format.space_after = Pt(1)
+                _run(bp, b, size=9, color=BODY, font=FONT)
+            main_cell.add_paragraph().paragraph_format.space_after = Pt(2)
+
+    projects = data.get("projects") or []
+    if projects:
+        main_section("Projects", first=not first_used)
+        first_used = True
+        for proj in projects:
+            p = main_cell.add_paragraph()
+            _run(p, _get(proj, "name"), bold=True, size=10, color=TEXT, font=FONT)
+            desc = _get(proj, "description")
+            if desc:
+                dp = main_cell.add_paragraph()
+                _run(dp, desc, italic=True, size=9, color=SUB, font=FONT)
+            for b in proj.get("bullets") or []:
+                bp = main_cell.add_paragraph(style="List Bullet")
+                bp.paragraph_format.space_after = Pt(1)
+                _run(bp, b, size=9, color=BODY, font=FONT)
+            main_cell.add_paragraph().paragraph_format.space_after = Pt(2)
+
+    # --- sidebar (right) ---
+    side_first = clear(side_cell)
+
+    def side_section(title, first=False):
+        target = side_first if first else side_cell.add_paragraph()
+        target.paragraph_format.space_before = Pt(0 if first else 10)
+        target.paragraph_format.space_after = Pt(4)
+        _run(target, title.upper(), bold=True, size=9, color=ACCENT, font=FONT)
+
+    side_first_used = False
+    skills = data.get("skills") or []
+    if skills:
+        side_section("Skills", first=True)
+        side_first_used = True
+        for s in skills:
+            sp = side_cell.add_paragraph(style="List Bullet")
+            sp.paragraph_format.space_after = Pt(1)
+            _run(sp, s, size=9, color=BODY, font=FONT)
+
+    education = data.get("education") or []
+    if education:
+        side_section("Education", first=not side_first_used)
+        side_first_used = True
+        for edu in education:
+            p = side_cell.add_paragraph()
+            p.paragraph_format.space_before = Pt(4)
+            _run(p, _get(edu, "degree"), bold=True, size=9, color=TEXT, font=FONT)
+            p2 = side_cell.add_paragraph()
+            _run(p2, _get(edu, "institution"), size=8, color=SUB, font=FONT)
+            p3 = side_cell.add_paragraph()
+            _run(p3, _get(edu, "dates"), size=8, color=SUB, font=FONT)
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
     tcPr = cell._tc.get_or_add_tcPr()
     mar = OxmlElement("w:tcMar")
     for edge, val in (("top", top), ("bottom", bottom), ("left", left), ("right", right)):
