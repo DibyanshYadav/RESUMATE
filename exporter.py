@@ -1,5 +1,6 @@
 """Render a structured resume dict to downloadable PDF and DOCX bytes."""
 from fpdf import FPDF
+from fpdf.enums import XPos, YPos
 from docx import Document
 from docx.shared import Pt, Inches
 import io
@@ -19,19 +20,19 @@ def build_pdf(data: dict) -> bytes:
 
     # Name
     pdf.set_font("Helvetica", "B", 18)
-    pdf.cell(0, 10, _safe(data.get("name", "")), ln=True)
+    pdf.cell(0, 10, _safe(data.get("name", "")), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     # Contact
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(80, 80, 80)
-    pdf.multi_cell(0, 5, _safe(data.get("contact", "")))
+    pdf.multi_cell(0, 5, _safe(data.get("contact", "")), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_text_color(0, 0, 0)
     pdf.ln(2)
 
     def section_title(title):
         pdf.set_font("Helvetica", "B", 12)
         pdf.set_draw_color(150, 150, 150)
-        pdf.cell(0, 8, _safe(title.upper()), ln=True)
+        pdf.cell(0, 8, _safe(title.upper()), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.line(pdf.get_x(), pdf.get_y(), pdf.get_x() + 190, pdf.get_y())
         pdf.ln(2)
 
@@ -39,14 +40,14 @@ def build_pdf(data: dict) -> bytes:
     if data.get("summary"):
         section_title("Summary")
         pdf.set_font("Helvetica", "", 10)
-        pdf.multi_cell(0, 5, _safe(data["summary"]))
+        pdf.multi_cell(0, 5, _safe(data["summary"]), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.ln(2)
 
     # Skills
     if data.get("skills"):
         section_title("Skills")
         pdf.set_font("Helvetica", "", 10)
-        pdf.multi_cell(0, 5, _safe(", ".join(data["skills"])))
+        pdf.multi_cell(0, 5, _safe(", ".join(data["skills"])), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.ln(2)
 
     # Experience
@@ -54,12 +55,12 @@ def build_pdf(data: dict) -> bytes:
         section_title("Experience")
         for job in data["experience"]:
             pdf.set_font("Helvetica", "B", 11)
-            pdf.cell(0, 6, _safe(f"{job.get('title','')} — {job.get('company','')}"), ln=True)
+            pdf.cell(0, 6, _safe(f"{job.get('title','')} — {job.get('company','')}"), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.set_font("Helvetica", "I", 9)
-            pdf.cell(0, 5, _safe(job.get("dates", "")), ln=True)
+            pdf.cell(0, 5, _safe(job.get("dates", "")), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.set_font("Helvetica", "", 10)
             for bullet in job.get("bullets", []):
-                pdf.multi_cell(0, 5, _safe(f"- {bullet}"))
+                pdf.multi_cell(0, 5, _safe(f"- {bullet}"), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.ln(2)
 
     # Projects
@@ -67,12 +68,12 @@ def build_pdf(data: dict) -> bytes:
         section_title("Projects")
         for proj in data["projects"]:
             pdf.set_font("Helvetica", "B", 11)
-            pdf.cell(0, 6, _safe(proj.get("name", "")), ln=True)
+            pdf.cell(0, 6, _safe(proj.get("name", "")), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.set_font("Helvetica", "", 10)
             if proj.get("description"):
-                pdf.multi_cell(0, 5, _safe(proj["description"]))
+                pdf.multi_cell(0, 5, _safe(proj["description"]), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             for bullet in proj.get("bullets", []):
-                pdf.multi_cell(0, 5, _safe(f"- {bullet}"))
+                pdf.multi_cell(0, 5, _safe(f"- {bullet}"), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.ln(2)
 
     # Education
@@ -80,9 +81,9 @@ def build_pdf(data: dict) -> bytes:
         section_title("Education")
         for edu in data["education"]:
             pdf.set_font("Helvetica", "B", 10)
-            pdf.cell(0, 6, _safe(edu.get("degree", "")), ln=True)
+            pdf.cell(0, 6, _safe(edu.get("degree", "")), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.set_font("Helvetica", "", 10)
-            pdf.cell(0, 5, _safe(f"{edu.get('institution','')} | {edu.get('dates','')}"), ln=True)
+            pdf.cell(0, 5, _safe(f"{edu.get('institution','')} | {edu.get('dates','')}"), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.ln(1)
 
     return bytes(pdf.output(dest="S"))
