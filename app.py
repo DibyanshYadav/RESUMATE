@@ -1130,3 +1130,4 @@ else:
         "Upload a resume and paste a JD, then click "
         "'Tailor my resume' to get started."
     )
+
