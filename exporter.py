@@ -87,7 +87,7 @@ def _get(d, *keys, default=""):
 
 def build_pdf(data: dict, template: str = "modern") -> bytes:
     template = (template or "modern").lower()
-    if template == "classic":
+    if template in ("classic", "minimal"):
         return _pdf_classic(data)
     if template == "compact":
         return _pdf_compact(data)
@@ -425,7 +425,7 @@ def _pdf_compact(data: dict) -> bytes:
 
 def build_docx(data: dict, template: str = "modern") -> bytes:
     template = (template or "modern").lower()
-    if template == "classic":
+    if template in ("classic", "minimal"):
         return _docx_classic(data)
     if template == "compact":
         return _docx_compact(data)
@@ -828,4 +828,5 @@ TEMPLATE_META = {
     "modern": {"label": "Modern", "description": "Single column, blue accent, sans-serif."},
     "classic": {"label": "Classic", "description": "Centered header, serif type, black & white — traditional/ATS-safe."},
     "compact": {"label": "Compact", "description": "Two-column with a teal sidebar for skills and education."},
+    "minimal": {"label": "Minimal", "description": "Ultra-clean single column, black & white, no color accents."},
 }

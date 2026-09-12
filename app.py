@@ -26,38 +26,33 @@ TEMPLATE_META = {
     "modern": {
         "label": "Modern",
         "description": "Single column, blue accent, sans-serif.",
+        "accent": "#2F5EFF",
+        "layout": "single",
     },
     "classic": {
         "label": "Classic",
         "description": "Centered header, serif type, black & white — traditional/ATS-safe.",
+        "accent": "#333333",
+        "layout": "centered",
     },
     "compact": {
         "label": "Compact",
         "description": "Two-column with a teal sidebar for skills and education.",
+        "accent": "#0D9488",
+        "layout": "two-col",
+    },
+    "minimal": {
+        "label": "Minimal",
+        "description": "Ultra-clean single column, black & white, no color accents.",
+        "accent": "#1A1A1A",
+        "layout": "single",
     },
 }
 
 
 # ---------------------------------------------------------------------------
-# Theme (light / dark)
+# Theme (permanent dark)
 # ---------------------------------------------------------------------------
-if "dark_mode" not in st.session_state:
-    st.session_state.dark_mode = False
-
-LIGHT_THEME = {
-    "accent": "#2F5EFF",
-    "accent_hover": "#244ED1",
-    "accent_light": "#EEF2FF",
-    "panel": "#F6F7FB",
-    "card": "#FFFFFF",
-    "text": "#111827",
-    "sub": "#6B7280",
-    "muted": "#9CA3AF",
-    "border": "#E5E7EB",
-    "input_bg": "#FFFFFF",
-    "shadow": "rgba(17, 24, 39, 0.06)",
-}
-
 DARK_THEME = {
     "accent": "#6E8CFF",
     "accent_hover": "#8AA2FF",
@@ -72,7 +67,7 @@ DARK_THEME = {
     "shadow": "rgba(0, 0, 0, 0.35)",
 }
 
-THEME = DARK_THEME if st.session_state.dark_mode else LIGHT_THEME
+THEME = DARK_THEME
 
 
 # ---------------------------------------------------------------------------
@@ -141,6 +136,45 @@ PREVIEW_CSS = """
     border-radius: 999px;
     font-size: 12px;
     margin: 0 6px 7px 0;
+}
+
+
+/* ------------------------------------------------------------------------ */
+/* Minimal template */
+/* ------------------------------------------------------------------------ */
+
+.resume-minimal {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #1a1a1a;
+}
+
+.resume-minimal .resume-header {
+    border-bottom: 2px solid #1a1a1a;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+
+.resume-minimal .resume-name {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.resume-minimal .resume-contact {
+    font-size: 12px;
+    color: #555;
+}
+
+.resume-minimal .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+    margin-top: 20px;
+    margin-bottom: 10px;
 }
 
 
@@ -490,6 +524,24 @@ def render_preview_html(data, template="modern"):
             f'<div class="summary">{summary}</div>'
         )
 
+    if template == "minimal":
+        skills_html = render_skills_list(skills)
+
+        return f"""
+        <div class="resume-preview resume-minimal">
+            <div class="resume-header">
+                <div class="resume-name">{name}</div>
+                <div class="resume-contact">{contact}</div>
+            </div>
+
+            {summary_html}
+            {render_section("Skills", skills_html)}
+            {render_section("Experience", experience_html)}
+            {render_section("Projects", projects_html)}
+            {render_section("Education", education_html)}
+        </div>
+        """
+
     if template == "classic":
         skills_html = render_skills_list(skills)
 
@@ -554,6 +606,47 @@ def render_preview_html(data, template="modern"):
         {render_section("Experience", experience_html)}
         {render_section("Projects", projects_html)}
         {render_section("Education", education_html)}
+    </div>
+    """
+
+
+def _template_swatch_html(accent, layout):
+    """Tiny CSS-drawn thumbnail representing a template's layout shape."""
+    if layout == "two-col":
+        body = f"""
+            <div style="display:flex; height:100%; gap:3px;">
+                <div style="width:32%; background:{accent}22; border-radius:2px;"></div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:3px; padding-top:2px;">
+                    <div style="height:6px; width:70%; background:{accent}; border-radius:2px;"></div>
+                    <div style="height:3px; width:90%; background:#00000022; border-radius:2px;"></div>
+                    <div style="height:3px; width:80%; background:#00000022; border-radius:2px;"></div>
+                    <div style="height:3px; width:85%; background:#00000022; border-radius:2px;"></div>
+                </div>
+            </div>
+        """
+    elif layout == "centered":
+        body = f"""
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px; padding-top:4px;">
+                <div style="height:6px; width:50%; background:{accent}; border-radius:2px;"></div>
+                <div style="height:3px; width:70%; background:#00000022; border-radius:2px;"></div>
+                <div style="height:3px; width:60%; background:#00000022; border-radius:2px;"></div>
+                <div style="height:3px; width:65%; background:#00000022; border-radius:2px;"></div>
+            </div>
+        """
+    else:
+        body = f"""
+            <div style="display:flex; flex-direction:column; gap:3px; padding-top:2px;">
+                <div style="height:6px; width:55%; background:{accent}; border-radius:2px;"></div>
+                <div style="height:3px; width:90%; background:#00000022; border-radius:2px;"></div>
+                <div style="height:3px; width:80%; background:#00000022; border-radius:2px;"></div>
+                <div style="height:3px; width:85%; background:#00000022; border-radius:2px;"></div>
+            </div>
+        """
+
+    return f"""
+    <div style="background:#ffffff; border-radius:8px; padding:8px; height:64px;
+                border:1px solid #ffffff33; box-sizing:border-box;">
+        {body}
     </div>
     """
 
@@ -783,6 +876,54 @@ st.html(
 
     .stAlert {{
         border-radius: 10px;
+        background: var(--card) !important;
+        color: var(--text) !important;
+    }}
+
+    /* ---- Force-dark: catch any remaining native widget chrome ---- */
+    [data-testid="stFileUploaderDropzone"],
+    [data-testid="stFileUploaderDropzone"] section,
+    [data-testid="stFileUploaderDropzone"] * {{
+        color: var(--text) !important;
+    }}
+
+    [data-testid="stFileUploaderFile"],
+    [data-testid="stFileUploaderFileData"] {{
+        background: var(--input-bg) !important;
+        color: var(--text) !important;
+        border-radius: 8px !important;
+    }}
+
+    [data-testid="stBaseButton-secondary"] {{
+        background: var(--input-bg) !important;
+        color: var(--text) !important;
+        border: 1px solid var(--border) !important;
+    }}
+
+    textarea, input, select {{
+        background: var(--input-bg) !important;
+        color: var(--text) !important;
+        caret-color: var(--text) !important;
+    }}
+
+    textarea::placeholder, input::placeholder {{
+        color: var(--muted) !important;
+    }}
+
+    [data-testid="stExpander"] summary,
+    [data-testid="stExpander"] p,
+    [data-testid="stExpander"] span {{
+        color: var(--text) !important;
+    }}
+
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] span,
+    [data-testid="stCaptionContainer"] {{
+        color: var(--text) !important;
+    }}
+
+    ::selection {{
+        background: var(--accent-light);
     }}
     </style>
     """
@@ -790,18 +931,12 @@ st.html(
 
 
 # ---------------------------------------------------------------------------
-# Top navbar + theme toggle
+# Top navbar
 # ---------------------------------------------------------------------------
-nav_left, nav_right = st.columns([0.82, 0.18])
-
-with nav_left:
-    st.markdown(
-        '<div class="rm-navbar-brand">📄 Resumate<span class="dot">.</span></div>',
-        unsafe_allow_html=True,
-    )
-
-with nav_right:
-    st.toggle("🌙 Dark mode", key="dark_mode")
+st.markdown(
+    '<div class="rm-navbar-brand">📄 Resumate<span class="dot">.</span></div>',
+    unsafe_allow_html=True,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -946,16 +1081,30 @@ if data:
             if st.session_state.template not in template_keys:
                 st.session_state.template = "modern"
 
-            st.session_state.template = st.radio(
-                "Template",
-                options=template_keys,
-                format_func=lambda key: TEMPLATE_META[key]["label"],
-                index=template_keys.index(
-                    st.session_state.template
-                ),
-                horizontal=True,
-                label_visibility="collapsed",
-            )
+            cols_per_row = 4
+            for row_start in range(0, len(template_keys), cols_per_row):
+                row_keys = template_keys[row_start:row_start + cols_per_row]
+                cols = st.columns(cols_per_row)
+
+                for col, key in zip(cols, row_keys):
+                    meta = TEMPLATE_META[key]
+                    with col:
+                        st.html(
+                            _template_swatch_html(
+                                meta["accent"], meta["layout"]
+                            )
+                        )
+
+                        is_selected = st.session_state.template == key
+
+                        if st.button(
+                            ("✓ " if is_selected else "") + meta["label"],
+                            key=f"tmpl_btn_{key}",
+                            use_container_width=True,
+                            type="primary" if is_selected else "secondary",
+                        ):
+                            st.session_state.template = key
+                            st.rerun()
 
             st.caption(
                 TEMPLATE_META[
