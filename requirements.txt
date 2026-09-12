@@ -2,6 +2,8 @@ streamlit
 langchain-groq
 langchain-core
 pypdf
-python-docx
+
 fpdf2
 python-dotenv
+reportlab
+python-docx
