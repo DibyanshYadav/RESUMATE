@@ -524,7 +524,7 @@ def render_preview_html(data, template="modern"):
 # ---------------------------------------------------------------------------
 # Global styling — Enhancv-style light SaaS look
 # ---------------------------------------------------------------------------
-st.markdown(
+st.html(
     f"""
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -706,8 +706,7 @@ st.markdown(
         border-radius: 10px;
     }}
     </style>
-    """,
-    unsafe_allow_html=True,
+    """
 )
 
 
@@ -1130,4 +1129,3 @@ else:
         "Upload a resume and paste a JD, then click "
         "'Tailor my resume' to get started."
     )
-
