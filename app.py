@@ -39,6 +39,43 @@ TEMPLATE_META = {
 
 
 # ---------------------------------------------------------------------------
+# Theme (light / dark)
+# ---------------------------------------------------------------------------
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
+
+LIGHT_THEME = {
+    "accent": "#2F5EFF",
+    "accent_hover": "#244ED1",
+    "accent_light": "#EEF2FF",
+    "panel": "#F6F7FB",
+    "card": "#FFFFFF",
+    "text": "#111827",
+    "sub": "#6B7280",
+    "muted": "#9CA3AF",
+    "border": "#E5E7EB",
+    "input_bg": "#FFFFFF",
+    "shadow": "rgba(17, 24, 39, 0.06)",
+}
+
+DARK_THEME = {
+    "accent": "#6E8CFF",
+    "accent_hover": "#8AA2FF",
+    "accent_light": "rgba(110, 140, 255, 0.14)",
+    "panel": "#0B0D12",
+    "card": "#161A22",
+    "text": "#F3F4F6",
+    "sub": "#9CA3AF",
+    "muted": "#6B7280",
+    "border": "#262B36",
+    "input_bg": "#1B1F29",
+    "shadow": "rgba(0, 0, 0, 0.35)",
+}
+
+THEME = DARK_THEME if st.session_state.dark_mode else LIGHT_THEME
+
+
+# ---------------------------------------------------------------------------
 # Resume preview CSS
 # ---------------------------------------------------------------------------
 PREVIEW_CSS = """
@@ -522,23 +559,28 @@ def render_preview_html(data, template="modern"):
 
 
 # ---------------------------------------------------------------------------
-# Global styling — Enhancv-style light SaaS look
+# Global styling — Enhancv-style light SaaS look, theme-aware
 # ---------------------------------------------------------------------------
 st.html(
     f"""
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     {PREVIEW_CSS}
 
     <style>
     :root {{
-        --accent: #2F5EFF;
-        --accent-light: #EEF2FF;
-        --panel: #F6F7FB;
-        --text: #111827;
-        --sub: #6B7280;
-        --border: #E5E7EB;
+        --accent: {THEME["accent"]};
+        --accent-hover: {THEME["accent_hover"]};
+        --accent-light: {THEME["accent_light"]};
+        --panel: {THEME["panel"]};
+        --card: {THEME["card"]};
+        --text: {THEME["text"]};
+        --sub: {THEME["sub"]};
+        --muted: {THEME["muted"]};
+        --border: {THEME["border"]};
+        --input-bg: {THEME["input_bg"]};
+        --shadow: {THEME["shadow"]};
     }}
 
     html, body, [class*="css"] {{
@@ -555,32 +597,66 @@ st.html(
     }}
 
     .block-container {{
-        padding-top: 2rem;
+        padding-top: 1.2rem;
         max-width: 1280px;
+    }}
+
+    /* ---- Top navbar ---- */
+    .rm-navbar {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.9rem 0.25rem 1.1rem 0.25rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 1.75rem;
+    }}
+
+    .rm-navbar-brand {{
+        font-family: 'Poppins', sans-serif;
+        font-weight: 800;
+        font-size: 1.35rem;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }}
+
+    .rm-navbar-brand span.dot {{
+        color: var(--accent);
+    }}
+
+    div[data-testid="stCheckbox"] label,
+    div[data-testid="stToggle"] label {{
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        color: var(--sub);
     }}
 
     /* ---- Hero header ---- */
     .rm-hero {{
-        background: linear-gradient(135deg, #2F5EFF 0%, #1E40D8 100%);
-        border-radius: 16px;
-        padding: 2.1rem 2.5rem;
-        margin-bottom: 1.75rem;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+        border-radius: 18px;
+        padding: 2.4rem 2.6rem;
+        margin-bottom: 2rem;
         color: white;
-        box-shadow: 0 8px 30px rgba(47, 94, 255, 0.25);
+        box-shadow: 0 12px 34px var(--shadow);
     }}
 
     .rm-hero h1 {{
         font-family: 'Poppins', sans-serif;
-        font-weight: 700;
-        font-size: 1.9rem;
-        margin: 0 0 0.35rem 0;
+        font-weight: 800;
+        font-size: 2.1rem;
+        margin: 0 0 0.5rem 0;
         color: white;
+        letter-spacing: -0.01em;
     }}
 
     .rm-hero p {{
-        font-size: 0.95rem;
+        font-size: 1rem;
         margin: 0;
-        opacity: 0.9;
+        opacity: 0.92;
+        max-width: 640px;
+        line-height: 1.5;
     }}
 
     /* ---- Section headers ---- */
@@ -597,10 +673,10 @@ st.html(
 
     /* ---- Cards ---- */
     div[data-testid="stVerticalBlockBorderWrapper"] {{
-        background: white;
-        border-radius: 14px !important;
+        background: var(--card);
+        border-radius: 16px !important;
         border: 1px solid var(--border) !important;
-        box-shadow: 0 2px 14px rgba(17, 24, 39, 0.04);
+        box-shadow: 0 2px 16px var(--shadow);
     }}
 
     /* ---- Buttons ---- */
@@ -618,19 +694,19 @@ st.html(
     .stDownloadButton > button {{
         background: var(--accent);
         color: white;
-        box-shadow: 0 4px 14px rgba(47, 94, 255, 0.3);
+        box-shadow: 0 4px 14px var(--shadow);
     }}
 
     .stButton > button[kind="primary"]:hover,
     .stDownloadButton > button:hover {{
-        background: #244ED1;
+        background: var(--accent-hover);
         transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(47, 94, 255, 0.4);
+        box-shadow: 0 6px 18px var(--shadow);
     }}
 
     .stButton > button:disabled {{
-        background: #E5E7EB;
-        color: #9CA3AF;
+        background: var(--border);
+        color: var(--muted);
         box-shadow: none;
     }}
 
@@ -640,6 +716,8 @@ st.html(
         border-radius: 10px !important;
         border: 1px solid var(--border) !important;
         font-family: 'Inter', sans-serif;
+        background: var(--input-bg) !important;
+        color: var(--text) !important;
     }}
 
     .stTextInput input:focus,
@@ -651,7 +729,7 @@ st.html(
     /* ---- File uploader ---- */
     [data-testid="stFileUploaderDropzone"] {{
         background: var(--accent-light) !important;
-        border: 1.5px dashed #B4C4FF !important;
+        border: 1.5px dashed var(--accent) !important;
         border-radius: 12px !important;
     }}
 
@@ -663,7 +741,7 @@ st.html(
     }}
 
     div[data-testid="stRadio"] label {{
-        background: white;
+        background: var(--card);
         border: 1.5px solid var(--border);
         border-radius: 10px;
         padding: 0.55rem 1rem !important;
@@ -700,6 +778,7 @@ st.html(
     [data-testid="stExpander"] {{
         border-radius: 10px !important;
         border: 1px solid var(--border) !important;
+        background: var(--card) !important;
     }}
 
     .stAlert {{
@@ -708,6 +787,21 @@ st.html(
     </style>
     """
 )
+
+
+# ---------------------------------------------------------------------------
+# Top navbar + theme toggle
+# ---------------------------------------------------------------------------
+nav_left, nav_right = st.columns([0.82, 0.18])
+
+with nav_left:
+    st.markdown(
+        '<div class="rm-navbar-brand">📄 Resumate<span class="dot">.</span></div>',
+        unsafe_allow_html=True,
+    )
+
+with nav_right:
+    st.toggle("🌙 Dark mode", key="dark_mode")
 
 
 # ---------------------------------------------------------------------------
@@ -729,7 +823,7 @@ if "template" not in st.session_state:
 st.markdown(
     """
     <div class="rm-hero">
-        <h1>📄 Resumate</h1>
+        <h1>Tailor your resume to any job, instantly</h1>
         <p>
             Upload your resume, paste a job description, and get a tailored
             version — edit it live, then export in the template you like.
@@ -1100,27 +1194,16 @@ if data:
     # Live preview
     # -----------------------------------------------------------------------
     with preview_col:
-        st.markdown(
-            '<div class="rm-preview-shell">',
-            unsafe_allow_html=True,
-        )
-
-        st.markdown(
-            '<div class="rm-preview-label">Live preview</div>',
-            unsafe_allow_html=True,
-        )
-
-        st.markdown(
-            render_preview_html(
-                data,
-                st.session_state.template,
-            ),
-            unsafe_allow_html=True,
-        )
-
-        st.markdown(
-            "</div>",
-            unsafe_allow_html=True,
+        st.html(
+            f"""
+            <div class="rm-preview-shell">
+                <div class="rm-preview-label">Live preview</div>
+                {render_preview_html(
+                    data,
+                    st.session_state.template,
+                )}
+            </div>
+            """
         )
 
 
